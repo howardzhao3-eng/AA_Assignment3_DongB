@@ -1,0 +1,18 @@
+{
+  "ndcg@5": 0.2625,
+  "ndcg@10": 0.2088,
+  "ndcg@20": 0.1842,
+  "precision@5": 0.202,
+  "recall@5": 0.1508,
+  "mrr": 0.4275,
+  "retrieval_ms": 13.373,
+  "ranking_ms": 1266.369,
+  "generation_ms": 2013.874,
+  "total_ms": 3293.616,
+  "embed_model": "all-MiniLM-L6-v2",
+  "llm_model": "gemma2:2b",
+  "doc_strategy": "metadata + top-3 positive reviews",
+  "retrieval_strategy": "vector search + LLM re-ranking",
+  "config_desc": "all-MiniLM-L6-v2 + gemma2:2b + metadata + top-3 positive reviews + vector search + LLM re-ranking",
+  "num_queries": 100
+}

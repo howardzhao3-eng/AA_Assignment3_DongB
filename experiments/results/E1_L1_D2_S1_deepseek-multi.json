@@ -1,0 +1,18 @@
+{
+  "ndcg@5": 0.1878,
+  "ndcg@10": 0.1552,
+  "ndcg@20": 0.1397,
+  "precision@5": 0.178,
+  "recall@5": 0.1756,
+  "mrr": 0.2452,
+  "retrieval_ms": 29.032,
+  "ranking_ms": 0.0,
+  "generation_ms": 0.0,
+  "total_ms": 29.032,
+  "embed_model": "nomic-embed-text",
+  "llm_model": "gemma2:2b",
+  "doc_strategy": "metadata + top-3 positive reviews",
+  "retrieval_strategy": "pure vector search, skip LLM",
+  "config_desc": "nomic-embed-text + gemma2:2b + metadata + top-3 positive reviews + pure vector search, skip LLM",
+  "num_queries": 100
+}

@@ -1,0 +1,18 @@
+{
+  "ndcg@5": 0.3045,
+  "ndcg@10": 0.2544,
+  "ndcg@20": 0.2329,
+  "precision@5": 0.202,
+  "recall@5": 0.1931,
+  "mrr": 0.494,
+  "retrieval_ms": 42.429,
+  "ranking_ms": 1691.721,
+  "generation_ms": 3960.464,
+  "total_ms": 5694.614,
+  "embed_model": "nomic-embed-text",
+  "llm_model": "phi3.5",
+  "doc_strategy": "metadata + top-3 positive reviews",
+  "retrieval_strategy": "vector search + LLM re-ranking",
+  "config_desc": "nomic-embed-text + phi3.5 + metadata + top-3 positive reviews + vector search + LLM re-ranking",
+  "num_queries": 100
+}

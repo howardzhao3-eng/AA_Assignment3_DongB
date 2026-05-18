@@ -1,0 +1,18 @@
+{
+  "ndcg@5": 0.2479,
+  "ndcg@10": 0.2015,
+  "ndcg@20": 0.1815,
+  "precision@5": 0.178,
+  "recall@5": 0.1328,
+  "mrr": 0.4312,
+  "retrieval_ms": 32.181,
+  "ranking_ms": 1335.934,
+  "generation_ms": 1989.007,
+  "total_ms": 3357.122,
+  "embed_model": "nomic-embed-text",
+  "llm_model": "gemma2:2b",
+  "doc_strategy": "metadata only",
+  "retrieval_strategy": "vector search + LLM re-ranking",
+  "config_desc": "nomic-embed-text + gemma2:2b + metadata only + vector search + LLM re-ranking",
+  "num_queries": 100
+}
