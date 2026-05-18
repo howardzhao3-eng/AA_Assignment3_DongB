@@ -38,6 +38,17 @@ def build_context(matches: list[dict]) -> str:
             p for p, enabled in platforms.items() if enabled
         ) or "Unknown platform"
 
+        # Build rating string from review counts, fall back to Metacritic
+        positive = match.get("positive", 0)
+        negative = match.get("negative", 0)
+        total = positive + negative
+        if total > 0:
+            rating_str = f"{positive / total * 100:.0f}% positive (from {total:,} reviews)"
+        elif metacritic_raw := match.get("metacritic"):
+            rating_str = f"Metacritic {metacritic_raw}"
+        else:
+            rating_str = "User ratings N/A"
+
         context_list.append(
             f"[Game {i}]\n"
             f"Name: {name}\n"
@@ -47,6 +58,7 @@ def build_context(matches: list[dict]) -> str:
             f"Price: {price}\n"
             f"Release Date: {release}\n"
             f"Platforms: {platform_str}\n"
+            f"Rating: {rating_str}\n"
         )
     return "\n---\n".join(context_list)
 
@@ -66,24 +78,54 @@ def generate_curated_recommendation(
     context_text = build_context(matches)
 
     prompt = (
-        f"You are a senior game editor. Recommend the best-matching Steam games based on the user's request.\n\n"
-        f"User request: '{query}'\n\n"
-        f"Candidate games:\n{context_text}\n\n"
-        f"Select the top 1~3 most relevant games and output in the following format:\n\n"
-        f"🎮 Recommended Game: 《Game Name》\n"
-        f"• Genre / Platform / Release Year / Rating\n"
-        f"• Why we recommend it: 3~4 bullet points, each focusing on a different dimension "
-        f"(gameplay, narrative, art, innovation, emotion, etc.), with specific details.\n"
-        f"• Best for: Clearly state which types of players will enjoy this game.\n"
-        f"• Similar games: 2~3 titles with brief explanations of similarities.\n"
-        f"• One-liner: A short sentence that sparks curiosity or emotional resonance.\n\n"
-        f"Formatting guidelines:\n"
-        f"- Use emojis tastefully, don't overdo it\n"
-        f"- Separate sections with blank lines\n"
-        f"- Keep total length around 300 words\n"
-        f"- Tone: professional, enthusiastic, engaging — not hype-ish\n\n"
-        f"Note: If some info (release year, rating) is missing from the candidate data, "
-        f"you may reasonably infer it or omit that field."
+        "You are a friend who has played these games for 100 hours. "
+        "Talk like you're texting a buddy — punchy, genuine, specific. "
+        "Use contractions and short sentences. Never use marketing fluff.\n\n"
+        "Output exactly three game cards in the format below. "
+        "No intro, no outro, no commentary — just the cards.\n\n"
+        "FORMAT:\n"
+        "🎮 Recommended Game: [Title] ([English name if different])\n"
+        "• Genre: ...\n"
+        "• Platform: ...\n"
+        "• Release Year: ...\n"
+        "• Rating: (copy the Rating field EXACTLY from the candidate data — do NOT write N/A if the data contains a rating)\n"
+        "• Why You'll Love It: (MUST give exactly 2-3 bullet points)\n"
+        "  1. Describe a concrete mechanic that matches one of the Notable tags. "
+        "Say exactly what you can do in the game.\n"
+        "  2. Quote or closely paraphrase the Player quote to ground it in a real player's words. "
+        "If there's no quote, describe a vivid sensory detail (visual style, music, atmosphere).\n"
+        "  3. (Optional third point) Add another hook — humor, challenge curve, or a standout moment.\n"
+        "  Avoid empty words like 'fun gameplay' or 'amazing experience'.\n"
+        "• Perfect For: 1–2 specific player types "
+        "(e.g., 'fans of physics sandboxes who love short chaotic sessions').\n"
+        "• If You Like: 2–3 games, each with a note in parentheses that names "
+        "ONE shared mechanic or emotional tone. Use the formula "
+        "'[Game] (both about [X])'. Be specific, avoid vague terms like 'exploration'.\n"
+        "• One-Liner: An evocative sentence that captures the heart of the game "
+        "in a personal, memorable way.\n\n"
+        "EXAMPLE:\n"
+        "🎮 Recommended Game: Dave the Diver (DAVE THE DIVER)\n"
+        "• Genre: Adventure, Simulation, RPG\n"
+        "• Platform: Windows, Mac\n"
+        "• Release Year: 2023\n"
+        "• Rating: Metacritic 90\n"
+        "• Why You'll Love It:\n"
+        "  1. You can dive into a procedurally generated ocean by day and run "
+        "a sushi restaurant by night — the loop is addictive because every catch "
+        "literally becomes a menu item.\n"
+        "  2. One Steam reviewer says it's 'the perfect mix of exploration and "
+        "management,' and they're right — there's always a new recipe or upgrade waiting.\n"
+        "  3. The hand-drawn pixel art makes every fish feel handcrafted, and the "
+        "jazzy soundtrack during dinner service is pure vibes.\n"
+        "• Perfect For: Stardew Valley fans who want more underwater exploration, "
+        "and anyone who likes switching between action and zen management.\n"
+        "• If You Like: Stardew Valley (both about farming-life loop with exploration), "
+        "Moonlighter (both about fight by day, sell by night), "
+        "Subnautica (both about oceanic immersion and discovery).\n"
+        "• One-Liner: When your sushi bar needs the freshest catch, you're the diver "
+        "who brings up the sea's best-kept secrets.\n\n"
+        "Now recommend games for: \"" + query + "\"\n"
+        "Candidate data:\n" + context_text
     )
 
     try:
@@ -93,9 +135,10 @@ def generate_curated_recommendation(
                 {
                     "role": "system",
                     "content": (
-                        "You are a senior game editor with deep knowledge of Steam games. "
-                        "Your recommendation style is professional, warm, and engaging — never hype-ish. "
-                        "You excel at using concise language and specific details to captivate readers."
+                        "You are a formatting engine that only outputs game cards. "
+                        "You have the voice of a trusted gamer friend. "
+                        "Never write introductions, summaries, or markdown outside the cards. "
+                        "Never invent ratings — copy them exactly from the data."
                     ),
                 },
                 {"role": "user", "content": prompt},

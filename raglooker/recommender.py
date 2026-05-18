@@ -62,6 +62,9 @@ class GameRecord:
                 "mac": bool(self.raw.get("mac")),
                 "linux": bool(self.raw.get("linux")),
             },
+            "positive": self.raw.get("positive", 0),
+            "negative": self.raw.get("negative", 0),
+            "top_reviews": self.raw.get("top_reviews", ""),
         }
 
     @staticmethod

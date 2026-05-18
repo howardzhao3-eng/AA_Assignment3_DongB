@@ -59,6 +59,8 @@ def load_games_from_sqlite(db_path: Path, limit: int = 5000, select_mode: str = 
             "windows": bool(row["windows"]),
             "mac": bool(row["mac"]),
             "linux": bool(row["linux"]),
+            "positive": row["positive"] if row["positive"] is not None else 0,
+            "negative": row["negative"] if row["negative"] is not None else 0,
             "developers": _load_json_value(row["developers_json"], []),
             "publishers": _load_json_value(row["publishers_json"], []),
             "categories": _load_json_value(row["categories_json"], []),
