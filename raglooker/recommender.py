@@ -458,13 +458,71 @@ class GameSearchEngine:
             print(f"LLM ranking error: {e}")
             return [(cand, 1.0 - i / len(candidates)) for i, cand in enumerate(candidates[:5])]
 
+    def _build_rich_context(self, matches: list[tuple[GameRecord, float]]) -> str:
+        """
+        Build rich LLM context from top matches.
+        Includes rating, platforms, price, tags, and player reviews.
+        Mirrors the build_context() logic in demo_formatted_output.py.
+        """
+        context_list = []
+        for i, (record, score) in enumerate(matches[:5], 1):
+            name = record.name
+            desc = record.short_description or "No description"
+
+            genres_raw = record.raw.get("genres", [])
+            genres = ", ".join(
+                g['description'] if isinstance(g, dict) else str(g)
+                for g in genres_raw[:3]
+            ) or "Unknown genre"
+
+            tags_raw = record._normalize_tags(record.raw.get("tags"))
+            tags_str = ", ".join(tags_raw[:6]) if tags_raw else "No tags"
+
+            price = record.raw.get("price", "Unknown")
+            release = record.raw.get("release_date", "Unknown")
+
+            platform_parts = [
+                p for p, enabled in [
+                    ("Windows", bool(record.raw.get("windows"))),
+                    ("Mac", bool(record.raw.get("mac"))),
+                    ("Linux", bool(record.raw.get("linux"))),
+                ] if enabled
+            ]
+            platform_str = "/".join(platform_parts) or "Unknown platform"
+
+            positive = record.raw.get("positive", 0) or 0
+            negative = record.raw.get("negative", 0) or 0
+            total = positive + negative
+            if total > 0:
+                rating_str = f"{positive / total * 100:.0f}% positive (from {total:,} reviews)"
+            else:
+                rating_str = "User ratings N/A"
+
+            reviews = record.raw.get("top_reviews", "No player reviews available.")
+
+            context_list.append(
+                f"[Game {i}]\n"
+                f"Name: {name}\n"
+                f"Description: {desc}\n"
+                f"Genres: {genres}\n"
+                f"Tags: {tags_str}\n"
+                f"Price: {price}\n"
+                f"Release Date: {release}\n"
+                f"Platforms: {platform_str}\n"
+                f"Rating: {rating_str}\n"
+                f"Player Reviews: {reviews}\n"
+            )
+        return "\n---\n".join(context_list)
+
     def generate_answer(self, query: str,
                         matches: list[tuple[GameRecord, float]]) -> str:
         """
-        Generate a natural language recommendation using LLM.
+        Generate a formatted game recommendation using LLM.
 
         Only runs when retrieval strategy uses LLM (S2).
         Returns empty string for S1 (pure vector).
+        Uses a rich prompt (game card format, friend-style voice) mirroring
+        the demo_formatted_output.py approach.
         """
         if not self.config['retrieval_strategy']['use_llm_rank']:
             return ""
@@ -473,34 +531,46 @@ class GameSearchEngine:
             return "No matching games were found for your request."
 
         llm_model = self.config['llm_model']['name']
-
-        # Build context from top 5 matches — top_reviews was injected in __init__
-        context_list = []
-        for record, score in matches[:5]:
-            reviews = record.raw.get('top_reviews', 'No player reviews available.')
-            context_list.append(
-                f"GAME: {record.name}\n"
-                f"MATCH SCORE: {score:.4f}\n"
-                f"DESCRIPTION: {record.short_description}\n"
-                f"REVIEWS: {reviews}"
-            )
-        context_text = "\n---\n".join(context_list)
+        context_text = self._build_rich_context(matches)
 
         prompt = (
-            f"You are a professional Steam game curator.\n"
-            f"User request: '{query}'\n\n"
-            f"Candidate Games Dataset:\n{context_text}\n\n"
-            f"Instructions:\n"
-            f"1. Select the top 3 best matching games.\n"
-            f"2. For each game, explain why it matches the user's request.\n"
-            f"3. Include specific features, genres, or mechanics.\n"
-            f"4. Be conversational but informative.\n\n"
-            f"Respond in paragraphs."
+            "You are a friend who has played these games for 100 hours. "
+            "Talk like you're texting a buddy — punchy, genuine, specific. "
+            "Use contractions and short sentences. Never use marketing fluff.\n\n"
+            "Output exactly three game cards in the format below. "
+            "No intro, no outro, no commentary — just the cards.\n\n"
+            "FORMAT:\n"
+            "🎮 Recommended Game: [Title]\n"
+            "• Genre: ...\n"
+            "• Platform: ...\n"
+            "• Release Year: ...\n"
+            "• Rating: (copy the Rating field EXACTLY from the candidate data — do NOT write N/A if the data contains a rating)\n"
+            "• Why You'll Love It: (MUST give exactly 2-3 bullet points)\n"
+            "  1. Describe a concrete mechanic that matches one of the Tags. Say exactly what you can do in the game.\n"
+            "  2. Quote or closely paraphrase the Player Reviews to ground it in real words. "
+            "If there are no reviews, describe a vivid sensory detail (visual style, music, atmosphere).\n"
+            "  3. (Optional) Add another hook — humor, challenge curve, or a standout moment.\n"
+            "  Avoid empty words like 'fun gameplay' or 'amazing experience'.\n"
+            "• Perfect For: 1-2 specific player types "
+            "(e.g., 'fans of physics sandboxes who love short chaotic sessions').\n"
+            "• If You Like: 2-3 games, each with a note in parentheses naming ONE shared mechanic or tone. "
+            "Use the formula '[Game] (both about [X])'. Be specific.\n"
+            "• One-Liner: An evocative sentence that captures the heart of the game in a personal, memorable way.\n\n"
+            f"Now recommend games for: \"{query}\"\n"
+            f"Candidate data:\n{context_text}"
         )
 
         try:
             response = ollama.chat(model=llm_model, messages=[
-                {"role": "system", "content": "You are a helpful Steam game curator."},
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a formatting engine that only outputs game cards. "
+                        "You have the voice of a trusted gamer friend. "
+                        "Never write introductions, summaries, or markdown outside the cards. "
+                        "Never invent ratings — copy them exactly from the data."
+                    ),
+                },
                 {"role": "user", "content": prompt}
             ])
             return response['message']['content']
