@@ -53,8 +53,8 @@ def get_experiment_config(exp_id: str) -> dict:
     }
 
 
-# Final recommended configuration: all-MiniLM-L6-v2 + gemma2:2b + D2 + S2
-FINAL_CONFIG = "E2_L1_D2_S2"
+# Final recommended configuration: nomic-embed-text + gemma2:2b + D2 + S2
+FINAL_CONFIG = "E1_L1_D2_S2"
 
 # All 5 experiments (no duplicates, no E3/L3/D3/S3)
 ALL_EXPERIMENTS = [
