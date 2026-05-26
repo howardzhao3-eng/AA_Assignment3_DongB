@@ -15,7 +15,7 @@ def create_search_engine(config: dict | None = None) -> GameSearchEngine:
     Create a configured GameSearchEngine instance.
 
     If config is None, use the final recommended configuration
-    (E2_L1_D2_S2 = all-MiniLM + gemma2:2b + D2 + S2).
+    (E1_L1_D2_S2 = nomic-embed-text + gemma2:2b + D2 + S2).
     """
     if config is None:
         config = get_experiment_config(FINAL_CONFIG)
