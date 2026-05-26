@@ -59,8 +59,8 @@ FINAL_CONFIG = "E1_L1_D2_S2"
 # All 5 experiments (no duplicates, no E3/L3/D3/S3)
 ALL_EXPERIMENTS = [
     # Embedding comparison (fixed: L1 + D2 + S2)
-    "E1_L1_D2_S2",  # baseline: nomic + gemma2:2b
-    "E2_L1_D2_S2",  # all-MiniLM-L6-v2 ⭐ FINAL
+    "E1_L1_D2_S2",  # nomic + gemma2:2b  FINAL
+    "E2_L1_D2_S2",  # all-MiniLM-L6-v2 (comparison)
 
     # LLM comparison (fixed: E1 + D2 + S2)
     "E1_L2_D2_S2",  # phi3.5
