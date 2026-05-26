@@ -28,7 +28,7 @@ from deepseek_api import DeepSeekClient  # noqa: E402
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-CONFIG_NAME = "E2_L1_D2_S2"
+CONFIG_NAME = "E1_L1_D2_S2"
 INPUT_FILE = Path(__file__).resolve().parent / "results" / f"{CONFIG_NAME}_deepseek-multi_per_query.json"
 OUTPUT_FILE = Path(__file__).resolve().parent / "results" / f"{CONFIG_NAME}_error_analysis.json"
 NUM_FAILED_TO_ANALYZE = 15
